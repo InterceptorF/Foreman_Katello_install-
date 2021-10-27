@@ -1,0 +1,76 @@
+# Foreman/Katello Setup ATTEMPT 5 on co-virt-00 VM = Katello 
+
+# configure the firewall 
+echo "configureing firewall settings >> firewall-cmd --add-port="80/tcp" --add-port="443/tcp" --add-port="5647/tcp" --add-port="8000/tcp" --add-port="8140/tcp" --add-port="9090/tcp" --add-port="53/udp" --add-port="53/tcp" --add-port="67/udp" --add-port="69/udp" "
+firewall-cmd --add-port="80/tcp" --add-port="443/tcp" --add-port="5647/tcp" --add-port="8000/tcp" --add-port="8140/tcp" --add-port="9090/tcp" --add-port="53/udp" --add-port="53/tcp" --add-port="67/udp" --add-port="69/udp"
+
+##! Above command returned an error
+## [root@localhost ddn]# firewall-cmd --add-port="80/tcp" --add-port="443/tcp" --add-port="5647/tcp" --add-port="8000/tcp" --add-port="8140/tcp" --add-port="9090/tcp" --add-port="53/udp" --add-port="53/tcp" --add-port="67/udp" --add-port="69/udp"
+## You're performing an operation over default zone ('public'),
+## but your connections/interfaces are in zone 'libvirt' (see --get-active-zones)
+## You most likely need to use --zone=libvirt option.
+
+## Per the error given, I added "--zone=libvirt" to the string which came back successful. 
+firewall-cmd --zone=libvirt --add-port="80/tcp" --add-port="443/tcp" --add-port="5647/tcp" --add-port="8000/tcp" --add-port="8140/tcp" --add-port="9090/tcp" --add-port="53/udp" --add-port="53/tcp" --add-port="67/udp" --add-port="69/udp"
+
+echo "Make the firewall changes persistent: firewall-cmd --runtime-to-permanent"
+firewall-cmd --runtime-to-permanent
+
+echo "list firewall output"
+firewall-cmd --list-all
+
+# clear any metadata
+echo "clear any metadata"
+dnf -y clean all
+
+echo "Install the foreman-release.rpm package"
+dnf -y localinstall https://yum.theforeman.org/releases/3.0/el8/x86_64/foreman-release.rpm
+
+##! 
+CentOS Linux 8 - AppStream                      0.0  B/s |   0  B     00:00    
+Errors during downloading metadata for repository 'appstream':
+  - Curl error (6): Couldn't resolve host name for http://mirrorlist.centos.org/?release=8&arch=x86_64&repo=AppStream&infra=stock [Could not resolve host: mirrorlist.centos.org]
+Error: Failed to download metadata for repo 'appstream': Cannot prepare internal mirrorlist: Curl error (6): Couldn't resolve host name for http://mirrorlist.centos.org/?release=8&arch=x86_64&repo=AppStream&infra=stock [Could not resolve host: mirrorlist.centos.org]
+
+## Opening Firefox shows it's not resolving DNS.
+## To fix, I went into gui network settings, set system to DHCP, then ran "hostnamectl set-hostname co-katello.####.com", then checked that /etc/resolv.conf showed the virt-manager DNS server ( 192.168.122.1) and rebooted the VM.
+## Once back up from reboot, Firefox allowed access to yahoo.com with no issues. I looked at /etc/sysconfig/network-scripts/ifcfg-ens3 file and it does not show the 'DNS=' line as I would suspect but I believe that is because the connection is set to DHCP. 
+## I reran 'dnf localinstall https://yum.theforeman.org/releases/3.0/el8/x86_64/foreman-release.rpm" and it worked.
+
+echo "Install the katello-repos-latest.rpm package"
+dnf -y localinstall https://yum.theforeman.org/katello/4.2/katello/el8/x86_64/katello-repos-latest.rpm
+
+echo "Install the centos-release-ansible-29 package to enable repositories for dependencies of the Ansible collection support:"
+dnf -y install centos-release-ansible-29
+
+echo "Install the puppet6-release-el-8.noarch.rpm package:"
+dnf -y localinstall https://yum.puppet.com/puppet6-release-el-8.noarch.rpm
+
+echo "Enable Ruby 2.7 module:"
+dnf -y module reset ruby
+dnf -y module enable ruby:2.7
+
+echo "Enable powertools repository:"
+dnf -y config-manager -y --set-enabled powertools
+
+echo "Enable the PostgreSQL 12 module:"
+dnf -y module enable postgresql:12
+
+echo "If the PostgreSQL 10 module has already been enabled, a module reset will need to be performed."
+dnf -y module reset postgresql
+dnf -y module enable postgresql:12
+
+## Install foreman server packages 
+dnf -y update
+dnf -y install foreman-installer-katello
+
+# Install foreman/Katello 
+ foreman-installer --scenario katello --foreman-initial-organization "DDN_LAB_KATELLO" --foreman-initial-location "COS" --foreman-initial-admin-username foreman_admin --foreman-initial-admin-password datadirect 
+
+##!!! Created a Katello-clone VM  - 10/27/2021 11:15 
+
+## Below are the additional setting I will need to validate to allow Katello to manage DNS and DHCP
+## --foreman-proxy-dns true --foreman-proxy-dns-managed true --foreman-proxy-dns-interface eno1 --foreman-proxy-dns-zone ccf.com --foreman-proxy-dns-reverse 43.36.10.in-addr.arpa --foreman-proxy-dhcp true --foreman-proxy-dhcp-managed true --foreman-proxy-dhcp-interface eno1 --foreman-proxy-dhcp-range "10.36.43.3 10.36.43.240" --foreman-proxy-dhcp-gateway 10.36.43.1 --foreman-proxy-dhcp-nameservers 10.36.43.2 --foreman-proxy-tftp true --foreman-proxy-tftp-managed true --foreman-proxy-tftp-servername 10.36.43.2
+
+
+
