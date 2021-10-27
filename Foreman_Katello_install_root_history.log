@@ -1,0 +1,52 @@
+[ddn@co-katello ~]$ su
+Password: 
+[root@co-katello ddn]# history
+    1  clear
+    2  pwd
+    3  free
+    4  firewall-cmd --add-port="80/tcp" --add-port="443/tcp" --add-port="5647/tcp" --add-port="8000/tcp" --add-port="8140/tcp" --add-port="9090/tcp" --add-port="53/udp" --add-port="53/tcp" --add-port="67/udp" --add-port="69/udp"
+    5  firewall-cmd --zone=libvirt
+    6  man firewall-cmd
+    7  firewall-cmd -get-default-zone
+    8  firewall-cmd -get-active-zones
+    9  firewall-cmd --get-active-zones
+   10  firewall-cmd --set-active-zone libvirt
+   11  man firewall-cmd
+   12  firewall-cmd --zone=libvirt --add-port="80/tcp" --add-port="443/tcp" --add-port="5647/tcp" --add-port="8000/tcp" --add-port="8140/tcp" --add-port="9090/tcp" --add-port="53/udp" --add-port="53/tcp" --add-port="67/udp" --add-port="69/udp"
+   13  firewall-cmd --zone=libvirt --runtime-to-permanent
+   14  firewall-cmd --runtime-to-permanent
+   15  firewall-cmd --list-all
+   16  dnf clean all
+   17  dnf localinstall https://yum.theforeman.org/releases/3.0/el8/x86_64/foreman-release.rpm
+   18  vim /etc/sysconfig/network-scripts/ifcfg-ens3 
+   19  cat /etc/resolv.conf 
+   20  systemctl status network
+   21  systemctl status httpd
+   22  hostnamectl set-hostname co-katello.datadirect.com
+   23  vim /etc/sysconfig/network-scripts/ifcfg-ens3 
+   24  cat /etc/resolv.conf 
+   25  dnf localinstall https://yum.theforeman.org/releases/3.0/el8/x86_64/foreman-release.rpm
+   26  dnf localinstall https://yum.theforeman.org/katello/4.2/katello/el8/x86_64/katello-repos-latest.rpm
+   27  dnf install centos-release-ansible-29
+   28  dnf localinstall https://yum.puppet.com/puppet6-release-el-8.noarch.rpm
+   29  dnf module reset ruby
+   30  dnf module enable ruby:2.7
+   31  dnf config-manager -y --set-enabled powertools
+   32  dnf -y module enable postgresql:12
+   33  dnf -y module reset postgresql
+   34  dnf -y module enable postgresql:12
+   35  dnf -y update
+   36  dnf -y install foreman-installer-katello
+   37  ping -c1 localhost
+   38  ping -c1 co-katello -f
+   39  systemctl status chronyd
+   40  systemctl status foreman  # Unit foreman.service could not be found.
+   41  systemctl status katello  # Unit katello.service could not be found.
+   42  cd /var/log
+   43  ls
+   44  cd foreman-installer/
+   45  ll
+   46  more foreman.log | grep https
+   47  more katello.log | grep https
+   48  history
+[root@co-katello ddn]# 
